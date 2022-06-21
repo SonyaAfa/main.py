@@ -410,8 +410,8 @@ def maxS_parall_axis_rect_with_two_corners_on_the_boundary(Corners):
     return l1,l3,S
 
 def intersect_line_with_crow(line,crow):
-    b=False
-    number_of_intersected_edge=1
+    b=False #b=пярмая и ломоная пересекаются
+    number_of_intersected_edge=2#номер вершины после которой следует ребро, с которым пересечение
     n=len(crow)-1
     line2=np.zeros((2,2))
     x1=0
@@ -419,12 +419,13 @@ def intersect_line_with_crow(line,crow):
     for i in range(n):
         line2[0]=crow[i]
         line2[1]=crow[i+1]
-        x,y=line_intersection(line,line2)
-        if x>=min(line2[0][0],line2[1][0]) and x<=max(line2[0][0],line2[1][0]):
+        x,y=line_intersection(line,line2)#сломается если line и  line2 параллельны
+        if x>=min(line2[0][0],line2[1][0]) and x<=max(line2[0][0],line2[1][0]):# не сработает если ломаная содержит
+                                                                               #вертикальный сегмент
             b=True
             x1=x
             y1=y
-           # number_of_intersected_edge=i
+            number_of_intersected_edge=i
     return x1,y1,b,number_of_intersected_edge
 
 #процудура возвращающая прямлйгольник наибольшей площади среди тех
@@ -499,6 +500,20 @@ def delete_edge(Samples,k):#
         new_crow[i]=Samples[(i+k+1)%n]
     return new_crow
 
+#процедура, возвращающая список вершин, нумируя начиная с той, которая идет после point
+def delete_edge_after_point(crow,x,y):
+    n=len(crow)
+    #new_crow=np.zeros((n,2))
+    j=-1
+    for i in range(n):
+        if crow[i][0]==x and crow[i][1]==y:
+            j=i
+    if j!=-1:
+        new_crow=delete_edge(crow,j)
+    else:
+        new_crow=crow
+    return new_crow
+
 #процедура нахождения прямоугольника макс площади среди техз у которых одна из вершин совпадает с углом многоугольника и
 # 3 вершины на границе многоугольника
 def maxS_par_rec_with_three_cor_on_crow_and_point(Corners):
@@ -507,6 +522,7 @@ def maxS_par_rec_with_three_cor_on_crow_and_point(Corners):
     line1 = np.zeros((2, 2))
     line2 = np.zeros((2, 2))
     line3 = np.zeros((2, 2))
+    line4 = np.zeros((2, 2))
     e1 = np.zeros(2)
     e3 = np.zeros(2)
     n=len(Corners)
@@ -519,8 +535,10 @@ def maxS_par_rec_with_three_cor_on_crow_and_point(Corners):
         line2[0] = Corners[i]
         line2[1] = [x0 , y0+1]  # вертикальная line x=x0
         broken_corners =delete_point(Corners,i)
+
+        #случай когда рассматриваемая точка и две соседние вершины прямоугольника касаются границы
         x1,y00,b1,num1=intersect_line_with_crow(line1,broken_corners)
-        x00,y1,b2,m=intersect_line_with_crow(line2,broken_corners)
+        x00,y1,b2,num2=intersect_line_with_crow(line2,broken_corners)
         s=abs((x1-x0)*(y1-y0))
         if b1 and b2 and in_polygon(Corners,x1,y1)>=0 and s>S:
            S=s
@@ -528,18 +546,76 @@ def maxS_par_rec_with_three_cor_on_crow_and_point(Corners):
            e3=[x1,y1]
            print(e1,e3,s)
             #
+        # случай когда рассматриваемая точка, соседняя по горизонтали и соседняя с ней касаются границы
         line3[0] = [x1,y0]
         line3[1] = [x1 , y0+1]  # вертикальная line x=x1
-        new_breakx1y0=delete_edge(Corners,num1)
-        x1,y1,b3,k=intersect_line_with_crow(line3,new_breakx1y0)
-        s = abs((x1 - x0) * (y1 - y0))
-        if b1 and b3 and in_polygon(Corners,x0,y1)>=0 and s>S:
-           S=s
-           e1=[x0,y0]
-           e3=[x1,y1]
-           print('e1e3s',e1,e3,s)
+        new_breakx1y0=delete_edge_after_point(Corners,broken_corners[num1][0],broken_corners[num1][1])
+        x11,y2,b3,num3=intersect_line_with_crow(line3,new_breakx1y0)
+        s=abs((x1-x0)*(y2-y0))
+        if b1 and b3 and in_polygon(Corners,x0,y2)>=0 and s>S:
+            S = s
+            e1 = [x0, y0]
+            e3 = [x1, y2]
+            print(e1, e3, s)
+        # случай когда рассматриваемая точкабсоседняя по вертикали и соседняя с ней касаются границы
+        line4[0]=[x0,y1]
+        line4[1] = [x0 + 1, y1]  # horizontal line y=y1
+        new_breakx0y1 = delete_edge_after_point(Corners, broken_corners[num2][0], broken_corners[num2][1])
+        x2, y11, b4, num4 = intersect_line_with_crow(line4, new_breakx0y1)
+        s = abs((x2 - x0) * (y1 - y0))
+        if b2 and b4 and in_polygon(Corners, x2, y0) >= 0 and s > S:
+            S = s
+            e1 = [x0, y0]
+            e3 = [x2, y1]
+            print(e1, e3, s)
+
 
     return e1,e3,S
+
+def maxS_par_rec_with_three_cor_on_crowABCD(Corners):
+    A, B, C, D = smash_the_bounary(Corners)
+    l1_abc, l3_abc, s_abc = maxS_par_rec_with_three_cor_on_crow(A, B, C, Corners)
+    l1_bcd, l3_bcd, s_bcd = maxS_par_rec_with_three_cor_on_crow(B, C, D, Corners)
+    l1_cda, l3_cda, s_cda= maxS_par_rec_with_three_cor_on_crow(C, D, A, Corners)
+    l1_dab, l3_dab, s_dab = maxS_par_rec_with_three_cor_on_crow(D, A, B, Corners)
+    S=max(s_abc,s_dab,s_cda,s_bcd)
+    if S==s_abc:
+        l1=l1_abc
+        l3=l3_abc
+    if S==s_dab:
+        l1=l1_dab
+        l3=l3_dab
+    if S==s_cda:
+        l1=l1_cda
+        l3=l3_cda
+    if S==s_bcd:
+        l1=l1_bcd
+        l3=l3_bcd
+    return l1,l3,S
+
+
+
+def max_parallel_axis_rectangle(Corners):
+    A, B, C, D = smash_the_bounary(Corners)
+    # поиск прямоугольника с двумя углами на границах
+    e1,e3,s1=maxS_parall_axis_rect_with_two_corners_on_the_boundary(Corners)
+    # поиск прямоугольника с тремя углами на границе, не совпадающими с вершинами многоугольника
+    l1,l3,s2=maxS_par_rec_with_three_cor_on_crowABCD(Corners)
+    # поиск прямоугольника с тремя углами на границе, хотя бы один из углов совпадает с вершиной
+    t1, t3, s3 = maxS_par_rec_with_three_cor_on_crow_and_point(Corners)
+    S=max(s1,s2,s3)
+    if S==s1: #u,v --- противоположные углы прямоугольника
+        u=e1
+        v=e3
+    if S==s2:
+        u=l1
+        v=l3
+    if S==s3:
+        u=t1
+        v=t3
+    return u,v,S
+
+
 def main():
     nodes=np.loadtxt('Nodes')  # читаю данные из файла как матрицу
     #print(nodes, ncs(nodes))
@@ -553,95 +629,26 @@ def main():
     print('b', B)
     print('C', C)
     print('D', D)
-    line1=np.zeros((2,2))
-    line1[0]=[0,0]
-    line1[1]=[1,1]
-    line2 = np.zeros((2, 2))
-    line2[0] = [2, 3]
-    line2[1] = [3, -2]
 
 
-    A=np.zeros(2)
-    A[0]=10
-    A[1]=0
-    B = np.zeros(2)
-    B[0]=10
-    B[1]=1
-    x=10
-    y=0
-    print('inhalfplane',in_half_plane(A,B,x,y))
-    print('inpolygon',in_polygon(corners,0,-8))
-
-#поиск прямоугольника с двумя углами на сегментах
-    A, B, C, D = smash_the_bounary(corners)
-    segment1=np.zeros((2,2))
-    segment2 = np.zeros((2, 2))
-    segment1[1]=[3,-1]
-    segment2[0]=[5,3]
-    segment2[1]=[1,6]
-    e1,e2,s=maxS_axis_parallel_rectangle_with_two_corners_on_segments(segment1,segment2)
-    print('maxRL',e1,e2,s)
-    rectangle=np.zeros((4,2))
-    rectangle[0]=e1
-    rectangle[1][0]=e2[0]
-    rectangle[1][1]=e1[1]
-    rectangle[2]=e2
-    rectangle[3][0]=e1[0]
-    rectangle[3][1]=e2[1]
-    #draw_crowbar(rectangle,'blue')
-    #plt.show()
-    #поиск прямоугольника с двумя углами на границах
-    l1,l3,s=maxS_parall_axis_rect_with_two_corners_on_the_boundary(corners)
-    print('maxR2',l1,l3,s)
     draw_polygon(corners)
-    if s!=0:
-        rectangle = np.zeros((5, 2))
-        rectangle[0] = l1
-        rectangle[1][0] = l3[0]
-        rectangle[1][1] = l1[1]
-        rectangle[2] = l3
-        rectangle[3][0] = l1[0]
-        rectangle[3][1] = l3[1]
-        rectangle[4] = l1
 
-        draw_crowbar(rectangle,'black')
-        #plt.show()
-    else:
-        print('s=0')
-    l1, l3, s=maxS_par_rec_with_three_cor_on_crow(A,B,C,corners)
-    l1, l3, s = maxS_par_rec_with_three_cor_on_crow( B, C,D, corners)
-    l1, l3, s = maxS_par_rec_with_three_cor_on_crow( C, D,A, corners)
-    l1, l3, s = maxS_par_rec_with_three_cor_on_crow( D, A,B, corners)
-    if s!=0:
-        rectangle = np.zeros((5, 2))
-        rectangle[0] = l1
-        rectangle[1][0] = l3[0]
-        rectangle[1][1] = l1[1]
-        rectangle[2] = l3
-        rectangle[3][0] = l1[0]
-        rectangle[3][1] = l3[1]
-        rectangle[4] = l1
+    u,v,s=max_parallel_axis_rectangle(corners)
+    rectangle = np.zeros((5, 2))
+    rectangle[0] = u
+    rectangle[1][0] = v[0]
+    rectangle[1][1] = u[1]
+    rectangle[2] = v
+    rectangle[3][0] = u[0]
+    rectangle[3][1] = v[1]
+    rectangle[4] = u
 
-        draw_crowbar(rectangle,'pink')
-        #plt.show()
-    else:
-        print('s=0')
-
-
-    l1,l3,s=maxS_par_rec_with_three_cor_on_crow_and_point(corners)
-    if s!=0:
-        rectangle = np.zeros((5, 2))
-        rectangle[0] = l1
-        rectangle[1][0] = l3[0]
-        rectangle[1][1] = l1[1]
-        rectangle[2] = l3
-        rectangle[3][0] = l1[0]
-        rectangle[3][1] = l3[1]
-        rectangle[4] = l1
-
-        draw_crowbar(rectangle,'blue')
-        #plt.show()
+    draw_crowbar(rectangle,'black')
     plt.show()
+
+
+
+
 
 
 # Press the green button in the gutter to run the script.
