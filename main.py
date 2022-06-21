@@ -411,6 +411,7 @@ def maxS_parall_axis_rect_with_two_corners_on_the_boundary(Corners):
 
 def intersect_line_with_crow(line,crow):
     b=False
+    number_of_intersected_edge=1
     n=len(crow)-1
     line2=np.zeros((2,2))
     x1=0
@@ -419,14 +420,15 @@ def intersect_line_with_crow(line,crow):
         line2[0]=crow[i]
         line2[1]=crow[i+1]
         x,y=line_intersection(line,line2)
-        if x>=min(line[0][0],line[1][0]) and x<=max(line[0][0],line[1][0]):
+        if x>=min(line2[0][0],line2[1][0]) and x<=max(line2[0][0],line2[1][0]):
             b=True
             x1=x
             y1=y
-    return x1,y1,b
+           # number_of_intersected_edge=i
+    return x1,y1,b,number_of_intersected_edge
 
 #процудура возвращающая прямлйгольник наибольшей площади среди тех
-#которые имеют ровно 2 угла (на A,B,C) на границе
+#которые имеют ровно 2 угла (на A,B,C) на границе, причем ни один угол прямоугольника не совпадает с углом многоугольника
 def maxS_par_rec_with_three_cor_on_crow(A,B,C,Corners):
     n = len(A) - 1
     m = len(C) - 1
@@ -440,7 +442,7 @@ def maxS_par_rec_with_three_cor_on_crow(A,B,C,Corners):
     b1=False
     b2=False
     b3=False
-    if n>0 and m>0 and k>0:
+    if n>0 and m>0 and k>0:#то есть никакое из множеств A,B,C не пустое
         for i in range(n):
             for j in range(k):
                 for l in range(m):
@@ -455,45 +457,89 @@ def maxS_par_rec_with_three_cor_on_crow(A,B,C,Corners):
                     x2, y2 = line_intersection(line2, line3)
                     x21 = (x1 + x2) / 2
                     y21 = (y1 + y2) / 2
-                    b2 = ((x21 >= B[j][0]) and (x21 <= B[j + 1][0]))  # середина отрезка попала на сегмент
+                    b2 = (x21 >= min(B[j][0],B[j+1][0]) and x21 <=max(B[j][0], B[j + 1][0])) # середина отрезка попала на сегмент
                     xx21 = np.zeros((2, 2))
                     xx21[0] = [x21, y21]
                     xx21[1] = [x21, y21 + 1]
                     x31, y31 = line_intersection(line3, xx21)
-                    b3 = ((x31 >= C[l][0]) and (x31 <= C[l + 1][0]))  #
+                    b3 = (x31 >= min(C[l][0],C[l+1][0]) and x31 <= max(C[l + 1][0],C[l][0]))  #
 
                     yy21 = np.zeros((2, 2))
                     yy21[0] = [x21, y21]
                     yy21[1] = [x21 + 1, y21]
                     x11, y11 = line_intersection(line1, yy21)
-                    b1 = (x11 >= A[i][0] and x11 <= A[i + 1][0])
+                    b1 = (x11 >= min(A[i][0],A[i+1][0]) and x11 <= max(A[i][0],A[i + 1][0]))
 
-                    if b1 and b2 and b3:
+                    b4=in_polygon(Corners,x11,y31)
+                    s = abs((x21 - x11) * (y31 - y21))
+
+                    if b1 and b2 and b3 and (b4>=0) and s>S:
                         e1 = [x11, y11]
                         e3 = [x31, y31]
-                        S = abs((x21 - x11) * (y31 - y21))
+                        S = s
     #перебор случаев когда одна их вершин прямоугольника совпадает с углом многоугольника
-    for i in range(n):
-        line1[0]=A[i]
-        line1[1]=[A[i][0]+1,A[i][1]]
-        xB,yB,b2=intersect_line_with_crow(line1,B)
-        if b2:
-            line2[0]=[xB,yB]
-            line2[1]=[xB,yB+1]
-            xC,yC,b3=intersect_line_with_crow(line2,C)
-            if b3 and in_polygon(Corners,A[i][0],yC):
-                s=abs((xC-xB)*(yB-A[i][1]))
-                if s>S:
-                    S=s
-                    e1=A[i]
-                    e3=[xC,yC]
-
-
-    #for j in range(k):
-    #for l in range(m+1):
 
     return e1,e3,S
 
+#процедура, возвращающая список вершин без k-й точки, нумируя начиная с k+1
+def delete_point(Samples,k):
+    n=len(Samples)
+    new_crow = np.zeros((n - 1, 2))
+    j=k+1
+    for i in range(n-1):
+        new_crow[i]=Samples[j%n]
+        j=(j+1)%n
+    return new_crow
+
+#процедура, возвращающая список вершин, нумируя начиная с k+1
+def delete_edge(Samples,k):#
+    n=len(Samples)
+    new_crow = np.zeros((n, 2))
+    for i in range(n):
+        new_crow[i]=Samples[(i+k+1)%n]
+    return new_crow
+
+#процедура нахождения прямоугольника макс площади среди техз у которых одна из вершин совпадает с углом многоугольника и
+# 3 вершины на границе многоугольника
+def maxS_par_rec_with_three_cor_on_crow_and_point(Corners):
+    A, B, C, D = smash_the_bounary(Corners)
+    S=0
+    line1 = np.zeros((2, 2))
+    line2 = np.zeros((2, 2))
+    line3 = np.zeros((2, 2))
+    e1 = np.zeros(2)
+    e3 = np.zeros(2)
+    n=len(Corners)
+    Broken_corners=np.zeros(n-1)
+    for i in range(n):
+        x0=Corners[i][0]
+        y0=Corners[i][1]
+        line1[0]=Corners[i]
+        line1[1]=[x0+1,y0]#horizontal line y=y0
+        line2[0] = Corners[i]
+        line2[1] = [x0 , y0+1]  # вертикальная line x=x0
+        broken_corners =delete_point(Corners,i)
+        x1,y00,b1,num1=intersect_line_with_crow(line1,broken_corners)
+        x00,y1,b2,m=intersect_line_with_crow(line2,broken_corners)
+        s=abs((x1-x0)*(y1-y0))
+        if b1 and b2 and in_polygon(Corners,x1,y1)>=0 and s>S:
+           S=s
+           e1=[x0,y0]
+           e3=[x1,y1]
+           print(e1,e3,s)
+            #
+        line3[0] = [x1,y0]
+        line3[1] = [x1 , y0+1]  # вертикальная line x=x1
+        new_breakx1y0=delete_edge(Corners,num1)
+        x1,y1,b3,k=intersect_line_with_crow(line3,new_breakx1y0)
+        s = abs((x1 - x0) * (y1 - y0))
+        if b1 and b3 and in_polygon(Corners,x0,y1)>=0 and s>S:
+           S=s
+           e1=[x0,y0]
+           e3=[x1,y1]
+           print('e1e3s',e1,e3,s)
+
+    return e1,e3,S
 def main():
     nodes=np.loadtxt('Nodes')  # читаю данные из файла как матрицу
     #print(nodes, ncs(nodes))
@@ -563,6 +609,9 @@ def main():
     else:
         print('s=0')
     l1, l3, s=maxS_par_rec_with_three_cor_on_crow(A,B,C,corners)
+    l1, l3, s = maxS_par_rec_with_three_cor_on_crow( B, C,D, corners)
+    l1, l3, s = maxS_par_rec_with_three_cor_on_crow( C, D,A, corners)
+    l1, l3, s = maxS_par_rec_with_three_cor_on_crow( D, A,B, corners)
     if s!=0:
         rectangle = np.zeros((5, 2))
         rectangle[0] = l1
@@ -578,8 +627,21 @@ def main():
     else:
         print('s=0')
 
-    plt.show()
 
+    l1,l3,s=maxS_par_rec_with_three_cor_on_crow_and_point(corners)
+    if s!=0:
+        rectangle = np.zeros((5, 2))
+        rectangle[0] = l1
+        rectangle[1][0] = l3[0]
+        rectangle[1][1] = l1[1]
+        rectangle[2] = l3
+        rectangle[3][0] = l1[0]
+        rectangle[3][1] = l3[1]
+        rectangle[4] = l1
+
+        draw_crowbar(rectangle,'blue')
+        #plt.show()
+    plt.show()
 
 
 # Press the green button in the gutter to run the script.
