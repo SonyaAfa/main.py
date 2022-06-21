@@ -146,28 +146,35 @@ def smash_the_bounary(Corners):
         if (a==4 and b==4):
             D.append(Corners[i%n])
         if (a==1 and b==2):
-            A.append(Corners[i%n])
+            if i!=0:
+                A.append(Corners[i%n])
             B.append(Corners[i%n])
         if (a==1 and b==3):
-            A.append(Corners[i%n])
+            if i != 0:
+                A.append(Corners[i%n])
             C.append(Corners[i%n])
         if (a==2 and b==3):
-            B.append(Corners[i%n])
+            if i != 0:
+                B.append(Corners[i%n])
             C.append(Corners[i%n])
         if (a==2 and b==4):
-            B.append(Corners[i%n])
+            if i != 0:
+                 B.append(Corners[i%n])
             D.append(Corners[i%n])
         if (a==3 and b==4):
-            C.append(Corners[i%n])
+            if i != 0:
+                C.append(Corners[i%n])
             D.append(Corners[i%n])
         if (a==3 and b==1):
-            C.append(Corners[i%n])
+            if i != 0:
+                C.append(Corners[i%n])
             A.append(Corners[i%n])
         if (a==4 and b==1):
             D.append(Corners[i%n])
             A.append(Corners[i%n])
         if (a==4 and b==2):
-            D.append(Corners[i%n])
+            if i != 0:
+                D.append(Corners[i%n])
             B.append(Corners[i%n])
         j+=1
         i=(i+1)%n
@@ -407,7 +414,7 @@ def maxS_parall_axis_rect_with_two_corners_on_the_boundary(Corners):
         m1=l1
         m2=l3
         S=Sac
-    return l1,l3,S
+    return m1,m2,S
 
 def intersect_line_with_crow(line,crow):
     b=False #b=пярмая и ломоная пересекаются
