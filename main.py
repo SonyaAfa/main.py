@@ -146,34 +146,34 @@ def smash_the_bounary(Corners):
         if (a==4 and b==4):
             D.append(Corners[i%n])
         if (a==1 and b==2):
-            if i!=0:
+            if j!=0:
                 A.append(Corners[i%n])
             B.append(Corners[i%n])
         if (a==1 and b==3):
-            if i != 0:
+            if j != 0:
                 A.append(Corners[i%n])
             C.append(Corners[i%n])
         if (a==2 and b==3):
-            if i != 0:
+            if j != 0:
                 B.append(Corners[i%n])
             C.append(Corners[i%n])
         if (a==2 and b==4):
-            if i != 0:
+            if j != 0:
                  B.append(Corners[i%n])
             D.append(Corners[i%n])
         if (a==3 and b==4):
-            if i != 0:
+            if j != 0:
                 C.append(Corners[i%n])
             D.append(Corners[i%n])
         if (a==3 and b==1):
-            if i != 0:
+            if j != 0:
                 C.append(Corners[i%n])
             A.append(Corners[i%n])
         if (a==4 and b==1):
             D.append(Corners[i%n])
             A.append(Corners[i%n])
         if (a==4 and b==2):
-            if i != 0:
+            if j != 0:
                 D.append(Corners[i%n])
             B.append(Corners[i%n])
         j+=1
@@ -600,8 +600,6 @@ def maxS_par_rec_with_three_cor_on_crowABCD(Corners):
         l3=l3_bcd
     return l1,l3,S
 
-
-
 def max_parallel_axis_rectangle(Corners):
     A, B, C, D = smash_the_bounary(Corners)
     # поиск прямоугольника с двумя углами на границах
@@ -654,13 +652,9 @@ def main():
     plt.show()
 
 
-
-
-
-
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     main()
-    print('PyCharm')
+
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
