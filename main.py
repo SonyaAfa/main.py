@@ -620,6 +620,41 @@ def max_parallel_axis_rectangle(Corners):
         v=t3
     return u,v,S
 
+#процедура проверки являются ли оинии параллельными
+def line_parall(line1, line2):
+    paral=False
+    x=0
+    y=0
+
+    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1]) #Typo was here
+
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    div = det(xdiff, ydiff)
+    if div == 0:
+       paral=True
+    return paral
+
+#процудура проверки является ли многоугольник многоугольником в общем положении
+#т.е. никакие две вершины не лежат на одной горизонтальной или вертикальной оси и никакие два ребра не параллельны
+def general_position(Corners):
+    b=True
+    n=len(Corners)
+    #никакие две вершины не лежат на одной горизонтальной или вертикальной оси
+    for i in range(len(Corners)):
+        for j in range(i+1,len(Corners),1):
+            if Corners[i][0]==Corners[j][0] or Corners[i][1]==Corners[j][1]:
+                b=False
+    #никакие два ребра не параллельны
+    for i in range(n):
+        for j in range(i+1,n,1):
+            line1=[Corners[i],Corners[(i+1)%n]]
+            line2 = [Corners[j], Corners[(j + 1)%n]]
+            if line_parall(line1,line2):
+                b=False
+    return b
 
 def main():
     nodes=np.loadtxt('Nodes')  # читаю данные из файла как матрицу
@@ -627,6 +662,7 @@ def main():
     #my=open('Corners','w')
     #my.close()
     corners = np.loadtxt('Corners')  # читаю данные из файла как матрицу
+    print('general_position',general_position(corners))
     draw_polygon(corners)
     plt.show()
     A,B,C,D=smash_the_bounary(corners)
