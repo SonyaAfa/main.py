@@ -93,19 +93,19 @@ def smash_the_bounary(Corners):
         y_prev=Corners[(i-1)%n][1]
         x_next=Corners[(i+1)%n][0]
         y_next=Corners[(i+1)%n][1]
-        if (x>x_prev and y<y_prev):
+        if (x>=x_prev and y<=y_prev):
             a=1
-        if (x>x_prev and y>y_prev):
+        if (x>=x_prev and y>y_prev):
             a=2
-        if (x<x_prev and y>y_prev):
+        if (x<x_prev and y>=y_prev):
             a=3
         if (x<x_prev and y<y_prev):
             a=4
-        if (x_next>x and y_next<y):
+        if (x_next>=x and y_next<=y):
             b=1
-        if (x_next>x and y_next>y):
+        if (x_next>=x and y_next>y):
             b=2
-        if (x_next<x and y_next>y):
+        if (x_next<x and y_next>=y):
             b=3
         if (x_next<x and y_next<y):
             b=4
@@ -121,19 +121,19 @@ def smash_the_bounary(Corners):
         y_prev = Corners[(i - 1) % n][1]
         x_next = Corners[(i + 1) % n][0]
         y_next = Corners[(i + 1) % n][1]
-        if (x > x_prev and y < y_prev):
+        if (x >= x_prev and y <= y_prev):
             a = 1
-        if (x > x_prev and y > y_prev):
+        if (x >= x_prev and y > y_prev):
             a = 2
-        if (x < x_prev and y > y_prev):
+        if (x < x_prev and y >= y_prev):
             a = 3
         if (x < x_prev and y < y_prev):
             a = 4
-        if (x_next > x and y_next < y):
+        if (x_next >= x and y_next <= y):
             b = 1
-        if (x_next > x and y_next > y):
+        if (x_next >= x and y_next > y):
             b = 2
-        if (x_next < x and y_next > y):
+        if (x_next < x and y_next >= y):
             b = 3
         if (x_next < x and y_next < y):
             b = 4
